@@ -1,19 +1,20 @@
-/*
+"""
 AUTHOR: Sabrina Kunzweiler <sabrina.kunzweiler@ruhr-uni-bochum.de>
 
 In this example we compute a  (2^86,2^86)-isogeny starting at a predefined abelian surface.
 This abelian surface is the Jacobian of a hyperelliptic curve defined by a Type-2 equation.
 The (2^86,2^86)-group defining this isogeny is randomly selected.
- */
+ """
 
 
-load "setup.m";
-load "Richelot_formulae.m";
+load("setup.sage");
+load("Richelot_formulae.sage");
 
 
-/* typical G2SIDH parameters  with a 171-bit prime (expected 128-bit security)*/
-p := 2^87*3^49*5^3-1;
-Fp2<z2> := FiniteField(p^2);
+
+# typical G2SIDH parameters  with a 171-bit prime (expected 128-bit security)
+p = 2^87*3^49*5^3-1;
+Fp2<z2> = FiniteField(p^2);
 
 type2_invariants :=  [
     3446798252521358094517040152788188703411472634458348*z2 +
@@ -89,7 +90,7 @@ for i := 1 to 4 do
       PP := Append(PP, [a0,a1,a2,b0,b1]);
 end for;
 
-ker := RandomSymplecticGroup(BB,87);
+ker := RandomSymplecticGroup(BB,87); #slow!
 
 t1 := Cputime();
 Ynew := RichelotChain(type2_invariants, ker,87:P_list:=PP,partition:=[12,11,10,9,8,8,7,6,6]);
