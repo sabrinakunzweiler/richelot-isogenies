@@ -51,20 +51,34 @@ def DoubleType2(P_list, type2_invariants):
     b33 = e1;
 
     #Reduction Step
-    b332 = b33^2;
-    den = E - b332;
+    """
+        den = E - b33^2;
+        if den == 0:
+            a0p = (-AC + b00^2)/(a02*(B + 2*b22*b33));
+            a1p = 1;
+            a2p = 0;
+            b0p = (b33*a0p - b22)*a0p^2 + b11*a0p - b00;
+            b1p = 0;
+        else:
+            a0p = (AC - b00^2)/(a02*den);
+            a1p = (2*a1*(b332-E) - B  - 2*b22*b33)/den;
+            a2p = 1;
+            b1p =  -b33*(a1p^2 - a0p) + b22*a1p - b11;
+            b0p = -b33*a0p*a1p + b22*a0p - b00;
+     """
+    den = b33^2 - E;
     if den == 0:
-      a0p = (-AC + b00^2)/(a02*(B + 2*b22*b33));
-      a1p = 1;
-      a2p = 0;
-      b0p = (b33*a0p - b22)*a0p^2 + b11*a0p - b00;
-      b1p = 0;
+       a0p = (-AC + b00^2)/(a02*(B + 2*b22*b33));
+       a1p = 1;
+       a2p = 0;
+       b0p = (b33*a0p - b22)*a0p^2 + b11*a0p - b00;
+       b1p = 0;
     else:
-      a0p = (AC - b00^2)/(a02*den);
-      a1p = (2*a1*(b332-E) - B  - 2*b22*b33)/den;
-      a2p = 1;
-      b1p =  (-b33*(a1p^2 - a0p) + b22*a1p - b11);
-      b0p = (-b33*a0p*a1p + b22*a0p - b00);
+       a0p = (b00^2-AC)/(a02*den);
+       a1p = -2*a1 + (B  + 2*b22*b33)/den;
+       a2p = 1;
+       b1p = -b33*(a1p^2 - a0p) + b22*a1p - b11;
+       b0p = -b33*a0p*a1p + b22*a0p - b00;
 
     P_list_new.append([a0p,a1p,a2p,b0p,b1p]);
   return P_list_new;
@@ -85,7 +99,7 @@ def MumfordTransformation(trafo, P_points):
     if a2 == 0 :
       print("not implemented");
     else:
-      adeni = 1/((-a0*ga + a1*de)*ga - de^2);
+      adeni = 1/((-a0*ga + a1de)*ga - de^2);
       a1p = (2*(a0*alga+bede) - a1*(bega + alde))*adeni;
       a0p = ((-a0*al + a1*be)*al - be^2)*adeni;
       b33 = (-b0*ga + b1*de)*ga^2;
@@ -160,16 +174,16 @@ def RichelotType1(type1_invariants, P_lists):
       mu = a1*b0-a0*b1;
       t1 = (a0-1)^2+a1^2;
       t2 = (a0+1)*a1;
-      a00 =  C*(C*t1 + B*t2) +  B^2*a0;
+      a00 =  C*(C*t1 + B*t2) + B^2*a0;
       a11 =  (C - 1)*(2*C*t2 + 4*B*a0);
-      a22 =  -2*C*t1 - B*(C +1)*t2 + 2*(-B^2 + 2*(C-1)^2)*a0;
-      a33 =  2*(-C + 1)*(t2 +2*B*a0);
-      a44 =  t1 + B*(t2 +  B*a0);
+      a22 =  -2*C*t1 - B*(C+1)*t2 + 2*(2*(C-1)^2 - B^2)*a0;
+      a33 =  2*(1-C)*(t2 + 2*B*a0);
+      a44 =  t1 + B*(t2 + B*a0);
       b00 =  mu*(C*(t1+A*a1) + B*a0*(a1+A)) + a0*b0*(a0-1)*(A*C-B);
-      b11 =  a0*(2*(C - 1)*(a1*mu-a0*b0)  + ((C- 2)*A+B)*mu +  (A*B - 2)*b0 + B*b1) +C*(A*((t2-a1)*b0 + mu) +b0*(t1+2*a0));
-      b22 =  -1*(t1  + B*(t2-a1)  + A*(B*a0 + a1))*mu+ a0*((B-A)*(a0-1)*b0  + 2*(C-1)*(b0*A+b1+mu));
-      b33 =  -( (A*a0+t2)*B+t1)*b0  + (B-A)*(mu+a0^2*b1);
-      bden =   (1 - a0) * (-b1*mu + b0^2);
+      b11 =  a0*(2*(C-1)*(a1*mu-a0*b0)  + ((C-2)*A+B)*mu +  (A*B-2)*b0 + B*b1) +C*(A*((t2-a1)*b0 + mu) +b0*(t1+2*a0));
+      b22 =  -1*(t1  + B*(t2-a1) + A*(B*a0 + a1))*mu+ a0*((B-A)*(a0-1)*b0  + 2*(C-1)*(b0*A+b1+mu));
+      b33 =  -((A*a0+t2)*B+t1)*b0 + (B-A)*(mu+a0^2*b1);
+      bden =  (1 - a0) * (b0^2 - b1*mu);
 
       # Reduction Step
       lam = E*(B-A)*bden^2 - (C-1)*b33^2;
@@ -183,7 +197,6 @@ def RichelotType1(type1_invariants, P_lists):
         bdeni = 1/bden;
         b1p = (-b11+b22*a1p+b33*(a0p-a1p^2))*bdeni;
         b0p = (-b00+(b22-b33*a1p)*a0p)*bdeni;
-
         Q_list.append([a0p,a1p,1,b0p,b1p]);
     Q_lists.append(Q_list);
   Ap = C;
@@ -254,7 +267,7 @@ def FindTransformation(type2_invariants, g1, g2, P=[]):
       gamma2 = (B+E*(g21-2*alpha2))/gamma2den;
       lc = 2*lc*alpha1*g11*(g21+alpha1-alpha2)*gamma2den;
 
-  if len(P) == 5 :
+  if len(P) == 5 : #change
     # Transformation (x-alpha2)/(x-alpha1) is applied  to the 4-torsion point P
     [a0,a1,a2,b0,b1] = P;
     mu = a1*b0-a0*b1;
@@ -263,11 +276,11 @@ def FindTransformation(type2_invariants, g1, g2, P=[]):
     a1p =  (a1*g11 - 2*(g10 + a0))*deni;
     aux1 = (deni*(alpha2 - alpha1))^2;
     b0p =  aux1 * (alpha1*(alpha1*(b1*alpha2+b0) + 2*b0*alpha2) + mu*(2*alpha1+alpha2+a1) - a0*b0);
-    b1p =  aux1 * (a0*b0 - alpha1^2*(b1*alpha1 +3*b0) - (3*alpha1 +a1)*mu);
+    b1p =  aux1 * (a0*b0 - alpha1^2*(b1*alpha1 +3*b0) - (3*alpha1 + a1)*mu);
 
   # compute sqrt(beta1*beta2) as explained in Corollary 2.8
   beta12 = beta1*beta2;
-  if len(P) == 5 :
+  if len(P) == 5 : #change
     invsqbeta12 = (beta12*b0p^2 + lc*(a0p-beta12)*(-a1p-beta1-beta2)*a0p^2)/(b0p*(b1p*a0p-a1p*b0p)*beta12+lc*((a0p-beta12)*a0p)^2);
     #print(invsqbeta12^2 == 1/beta12 );
   else:
@@ -301,19 +314,23 @@ def RichelotChain(type2_invariants, kernel,n,  P_list=[], partition=[0], last_st
   * OUTPUT:   - type2_invariants defining the codomain curve of the (2^n,2^n)-isogeny
   *           - Q_list: list of the image points in P_list under the isogeny
   """
-
+  time_doubling = 0;
   if sum(partition) > n :
     print("sum of partition:%o is incorrect \n",  sum(partition));
   m = n;
   for mi in partition :
     kernel_aux = kernel;
     m = m - mi;
+    t_doub = cputime()
     for j in range(1,m):
       kernel_aux = DoubleType2(kernel_aux, type2_invariants);
+    time_doubling = time_doubling + cputime(t_doub)
     for i in range(1,mi+1):
       kernel2_aux = kernel_aux;
+      t_doub = cputime()
       for j in range(1, mi-i+1):
         kernel2_aux = DoubleType2(kernel2_aux, type2_invariants);
+      time_doubling = time_doubling + cputime(t_doub)
       P4 = kernel2_aux[0];
       kernel2_aux = DoubleType2(kernel2_aux,type2_invariants);
       trafo, type1_invariants = FindTransformation(type2_invariants, kernel2_aux[0][:3], kernel2_aux[1][:3],P=P4);
@@ -324,15 +341,17 @@ def RichelotChain(type2_invariants, kernel,n,  P_list=[], partition=[0], last_st
   #remainder
   for i in range(1,m):
     kernel2 = kernel;
+    t_doub = cputime()
     for j in range(1, m-i) :
       kernel2 = DoubleType2(kernel2, type2_invariants);
+    time_doubling = time_doubling + cputime(t_doub)
     P4 = kernel2[0];
     kernel2 = DoubleType2(kernel2,type2_invariants);
     trafo, type1_invariants = FindTransformation(type2_invariants, kernel2[0][:3], kernel2[1][:3], P=P4);
     Q_lists = MumfordTransformationga1(trafo, [kernel, P_list]);
     type2_invariants, Q_lists = RichelotType1(type1_invariants, Q_lists);
     [kernel, P_list] = Q_lists;
-
+  print("time for doubling ", time_doubling)
   if last_step :
     trafo, type1_invariants = FindTransformation(type2_invariants, kernel[0][:3], kernel[1][:3]);
     Q_lists = MumfordTransformationga1(trafo, [P_list]);

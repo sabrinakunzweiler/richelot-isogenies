@@ -120,7 +120,7 @@ def jacobian_iter_double(h, u, v, n):
         u, v = jacobian_double(h, u, v)
     return u.monic(), v
 
-def FromJacToJac(h, kernel, points, a, powers=None):
+def FromJacToJac(h, kernel, points, a, powers=None, time_doubling=0):
     # power is an optional list of precomputed tuples
     # (l, 2^l D1, 2^l D2) where l < a are increasing
     R,x = h.parent().objgen()
@@ -138,22 +138,29 @@ def FromJacToJac(h, kernel, points, a, powers=None):
             gap = Integer(a).isqrt()
             doubles = [(0, D1, D2)]
             _D1, _D2 = D1, D2
+            t_doub = cputime()
             for i in range(a-1):
                 _D1 = jacobian_double(h, _D1[0], _D1[1])
                 _D2 = jacobian_double(h, _D2[0], _D2[1])
                 doubles.append((i+1, _D1, _D2))
+            time_doubling = time_doubling + cputime(t_doub)
             _, (G1, _), (G2, _) = doubles[a-1]
             G1, G2 = G1.monic(), G2.monic()
             next_powers = [doubles[a-2*gap], doubles[a-gap]]
         else:
+            t_doub = cputime()
             G1, _ = jacobian_iter_double(h, D1[0], D1[1], a-1)
             G2, _ = jacobian_iter_double(h, D2[0], D2[1], a-1)
+            time_doubling = time_doubling + cputime(t_doub)
+
     else:
         (l, _D1, _D2) = powers[-1]
         if a >= 16:
             next_powers = powers if l < a-1 else powers[:-1]
+        t_doub = cputime()
         G1, _ = jacobian_iter_double(h, _D1[0], _D1[1], a-1-l)
         G2, _ = jacobian_iter_double(h, _D2[0], _D2[1], a-1-l)
+        time_doubling = time_doubling + cputime(t_doub)
 
     #assert 2^a*D1 == 0
     #assert 2^a*D2 == 0
@@ -182,12 +189,14 @@ def FromJacToJac(h, kernel, points, a, powers=None):
     if next_powers:
         next_powers = [(l, R.map(_D1), R.map(_D2))
             for l, _D1, _D2 in next_powers]
-    return hnew, [imD1[0], imD1[1], imD2[0], imD2[1]], points_new, next_powers
+    return hnew, [imD1[0], imD1[1], imD2[0], imD2[1]], points_new, next_powers, time_doubling
 
 def IsogenyChainPO(h,kernel,points,a):
     next_powers = None
+    time_doubling = 0
     for i in range(a): #note: the last step is missing (assertion error)
         #print("round", i)
-        h, kernel, points, next_powers = FromJacToJac(
-            h, kernel, points, a-i, powers=next_powers)
+        h, kernel, points, next_powers, time_doubling = FromJacToJac(
+            h, kernel, points, a-i, powers=next_powers, time_doubling = time_doubling)
+    print("time for doubling ", time_doubling)
     return h, points
