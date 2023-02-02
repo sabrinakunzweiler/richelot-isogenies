@@ -69,13 +69,15 @@ for i := 1 to 4 do
 end for;
 
 ker := RandomSymplecticGroup(BB, 51);
-printf "Timing for the new algorithm:";
+
 t1 := Cputime();
-Ynew := RichelotChain(type2_invariants, ker, 51 : P_list:=PP, partition:=[10,8,7,6,5,5], last_step:=true);
-printf "CPU time for Richelot chain (Round 1): %o\n", Cputime(t1);
+Ynew := RichelotChain(type2_invariants, ker,51:P_list:=PP);
+printf "CPU time for Richelot chain (Round 1): %o\n",  Cputime(t1);
 t2 := Cputime();
-Ynew := RichelotChain(type2_invariants, ker, 51 : partition:=[10,8,7,6,5,5], last_step:=true);
-printf "CPU time for Richelot chain (Round 2): %o\n", Cputime(t2);
+Ynew := RichelotChain(type2_invariants, ker,51);
+printf "CPU time for Richelot chain (Round 2): %o\n",  Cputime(t2);
+print "Timing for the Castryck-Decru algorithm:";
+
 
 print "Timing for the Castryck-Decru algorithm:";
 //translation to the notation in the C-D algorithm
@@ -179,11 +181,12 @@ end for;
 
 ker := RandomSymplecticGroup(BB,87);
 
+
 t1 := Cputime();
-Ynew := RichelotChain(type2_invariants, ker,87:P_list:=PP,partition:=[12,11,10,9,8,8,7,6,6]);
+Ynew := RichelotChain(type2_invariants, ker,87:P_list:=PP);
 printf "CPU time for Richelot chain (Round 1): %o\n",  Cputime(t1);
 t2 := Cputime();
-Ynew := RichelotChain(type2_invariants, ker,87:partition:=[12,11,10,9,8,8,7,6,6]);
+Ynew := RichelotChain(type2_invariants, ker,87);
 printf "CPU time for Richelot chain (Round 2): %o\n",  Cputime(t2);
 
 print "Timing for the Castryck-Decru algorithm:";

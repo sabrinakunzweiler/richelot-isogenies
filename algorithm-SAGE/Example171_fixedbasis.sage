@@ -110,8 +110,8 @@ for i in range(4):
 ker = RandomSymplecticGroup(BB,87); #slow!
 
 t1 = cputime();
-Ynew = RichelotChain(type2_invariants, ker,87,P_list=PP,partition=[12,11,10,9,8,8,7,6,6]);
+Ynew = RichelotChain(type2_invariants, ker,87,P_list=PP);
 print("CPU time for Richelot chain (Round 1): ",  cputime(t1))
 t2 = cputime();
-Ynew = RichelotChain(type2_invariants, ker,87,partition=[12,11,10,9,8,8,7,6,6]);
+Ynew = RichelotChain(type2_invariants, ker,87);
 print("CPU time for Richelot chain (Round 2): ",  cputime(t2))

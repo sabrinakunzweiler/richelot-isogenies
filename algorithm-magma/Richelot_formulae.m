@@ -316,7 +316,7 @@ FindTransformation := function(type2_invariants, g1, g2:  P:=[])
 
 end function;
 
-RichelotChain := function(type2_invariants, kernel,n: P_list:=[], partition:=[0], last_step:=false)
+RichelotChain := function(type2_invariants, kernel,n: P_list:=[], last_step:=false)
   /*
   * INPUT:   - type2_invariants = [A,B,C,d] defining hyperelliptic curve
   *              y^2 = (x^2-1)(x^2-A)(E*x^2-B*x+C)
@@ -324,110 +324,55 @@ RichelotChain := function(type2_invariants, kernel,n: P_list:=[], partition:=[0]
   *             (2^n,2^n)-group of the Jacobian of the hyperelliptic curve
   *           - n
   *           - P_list: list of points
-  *           - partition: a list containing a partition of an integer smaller than n-1
   *             (as in Remark 5.5)
   * OUTPUT:   - type2_invariants defining the codomain curve of the (2^n,2^n)-isogeny
   *           - Q_list: list of the image points in P_list under the isogeny
   */
 
-  if not &+partition le n then
-    printf "sum of partition:%o is incorrect \n",  &+partition;
-  end if;
-  m := n;
-  for mi in partition do
-    kernel_aux := kernel;
-    m := m - mi;
-    for j := 1 to m-1 do
-      kernel_aux := DoubleType2(kernel_aux, type2_invariants);
-    end for;
-    for i := 1 to mi do
-      kernel2_aux := kernel_aux;
-      for j := 1 to mi-i do
-        kernel2_aux := DoubleType2(kernel2_aux, type2_invariants);
+  pos := 1;
+  kernel_aux := kernel;
+  indices := [0];
+  for i := 0 to n-2 do
+    //print indices;
+    gap := n-1-i - indices[pos];
+    if gap eq 1 then
+      P4 := kernel_aux[2*pos -1];
+      kernel2 := DoubleType2(kernel_aux[[2*pos-1, 2*pos]], type2_invariants);
+      if not indices[pos] eq 0 or not last_step then
+               Prune(~indices);
+               Prune(~kernel_aux);
+               Prune(~kernel_aux);
+               pos -:= 1;
+      end if;
+    elif gap eq 2 then
+      kernel4 :=  DoubleType2(kernel_aux[[2*pos-1, 2*pos]], type2_invariants);
+      P4 := kernel4[1];
+      kernel2 := DoubleType2(kernel4, type2_invariants);
+    else
+      new_ind := indices[pos] + Floor(gap/2);
+      new_aux := kernel_aux[[2*pos-1,2*pos]];
+      for j := 1 to Floor(gap/2) do
+        new_aux := DoubleType2(new_aux, type2_invariants);
       end for;
-      P4 := kernel2_aux[1];
-      kernel2_aux := DoubleType2(kernel2_aux,type2_invariants);
-      trafo, type1_invariants := FindTransformation(type2_invariants, kernel2_aux[1], kernel2_aux[2] : P:=P4);
-      Q_lists := MumfordTransformationga1(trafo, [kernel, kernel_aux, P_list]);
-      type2_invariants, Q_lists := RichelotType1(type1_invariants, Q_lists);
-      kernel, kernel_aux, P_list := Explode(Q_lists);
-    end for;
-  end for;
+      Append(~indices, new_ind);
+      kernel_aux cat:=  new_aux;
+      pos +:= 1;
+      for j := 1 to Ceiling(gap/2) -1 do
+        new_aux := DoubleType2(new_aux, type2_invariants);
+      end for;
+      P4 := new_aux[1];
+      kernel2 := DoubleType2(new_aux, type2_invariants);
+    end if;
 
-  /*remainder*/
-  for i := 1 to m-1 do
-    kernel2 := kernel;
-    for j := 1 to m-i-1 do
-      kernel2 := DoubleType2(kernel2, type2_invariants);
-    end for;
-    P4 := kernel2[1];
-    kernel2 := DoubleType2(kernel2,type2_invariants);
     trafo, type1_invariants := FindTransformation(type2_invariants, kernel2[1], kernel2[2] : P:=P4);
-    Q_lists := MumfordTransformationga1(trafo, [kernel, P_list]);
+    Q_lists := MumfordTransformationga1(trafo, [kernel_aux, P_list]);
     type2_invariants, Q_lists := RichelotType1(type1_invariants, Q_lists);
-    kernel, P_list := Explode(Q_lists);
+    kernel_aux, P_list := Explode(Q_lists);
   end for;
 
   if last_step then
-    trafo, type1_invariants := FindTransformation(type2_invariants, kernel[1], kernel[2]);
-    Q_lists := MumfordTransformationga1(trafo, [P_list]);
-    type2_invariants, P_list := RichelotType1(type1_invariants, Q_lists);
-  end if;
-  return type2_invariants, P_list;
-
-end function;
-
-
-RichelotChain_old := function(type2_invariants, kernel,n: P_list:=[], m:=1, last_step:=false)
-  /*
-  * INPUT:   - type2_invariants = [A,B,C,d] defining hyperelliptic curve
-  *              y^2 = (x^2-1)(x^2-A)(E*x^2-B*x+C)
-  *           - kernel = [P1,P2]: Mumford coordinates of P1,P2 in defining a
-  *             (2^n,2^n)-group of the Jacobian of the hyperelliptic curve
-  *           - n
-  *           - P_list: list of points
-  *           - m: paramter between 1 and n-1 accelerating the computation
-  *             (as in Remark 5.5)
-  * OUTPUT:   - type2_invariants defining the codomain curve of the (2^n,2^n)-isogeny
-  *           - Q_list: list of the image points in P_list under the isogeny
-  */
-
-  k := Floor((n-1)/m);
-
-  for o := 1 to m-1 do
-    kernel_aux := kernel;
-    for j := 1 to (m-o)*k do
-      kernel_aux := DoubleType2(kernel_aux, type2_invariants);
-    end for;
-    for i := (o-1)*k + 1 to o*k do
-      kernel2_aux := kernel_aux;
-      for j := 1 to n-(m-o)*k-i-1 do
-        kernel2_aux := DoubleType2(kernel2_aux, type2_invariants);
-      end for;
-      P4 := kernel2_aux[1];
-      kernel2_aux := DoubleType2(kernel2_aux,type2_invariants);
-      trafo, type1_invariants := FindTransformation(type2_invariants, kernel2_aux[1], kernel2_aux[2] : P:=P4);
-      Q_lists := MumfordTransformationga1(trafo, [kernel, kernel_aux, P_list]);
-      type2_invariants, Q_lists := RichelotType1(type1_invariants, Q_lists);
-      kernel, kernel_aux, P_list := Explode(Q_lists);
-    end for;
-  end for;
-
-  /*remainder*/
-  for i := (m-1)*k+1 to n-1 do
-    kernel2 := kernel;
-    for j := 1 to n-i-1 do
-      kernel2 := DoubleType2(kernel2, type2_invariants);
-    end for;
-    P4 := kernel2[1];
-    kernel2 := DoubleType2(kernel2,type2_invariants);
-    trafo, type1_invariants := FindTransformation(type2_invariants, kernel2[1], kernel2[2] : P:=P4);
-    Q_lists := MumfordTransformationga1(trafo, [kernel, P_list]);
-    type2_invariants, Q_lists := RichelotType1(type1_invariants, Q_lists);
-    kernel, P_list := Explode(Q_lists);
-  end for;
-  if last_step then
-    trafo, type1_invariants := FindTransformation(type2_invariants, kernel[1], kernel[2]);
+    kernel2 := kernel_aux;
+    trafo, type1_invariants := FindTransformation(type2_invariants, kernel2[1], kernel2[2]);
     Q_lists := MumfordTransformationga1(trafo, [P_list]);
     type2_invariants, P_list := RichelotType1(type1_invariants, Q_lists);
   end if;

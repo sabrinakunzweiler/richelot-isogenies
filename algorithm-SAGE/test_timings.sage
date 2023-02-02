@@ -92,10 +92,10 @@ ker = RandomSymplecticGroup(BB, 51);
 
 print("Our algorithm:")
 t1 = cputime();
-inv_new, PP_new = RichelotChain(type2_invariants, ker, 51, P_list=PP, partition=[10,8,7,6,5,5], last_step=true);
+inv_new, PP_new = RichelotChain(type2_invariants, ker, 51, P_list=PP, last_step=true);
 print("CPU time for Richelot chain (Round 1):", cputime(t1))
 t2 = cputime();
-inv_new, _ = RichelotChain(type2_invariants, ker, 51, partition=[10,8,7,6,5,5], last_step=true);
+inv_new, _ = RichelotChain(type2_invariants, ker, 51, last_step=true);
 print("CPU time for Richelot chain (Round 2):", cputime(t2))
 [Ap,Bp,Cp,Ep] = inv_new;
 Ynew = HyperellipticCurve((x^2-1)*(x^2-Ap)*(Ep*x^2-Bp*x+Cp));
@@ -195,10 +195,10 @@ ker = RandomSymplecticGroup(BB,87); #slow!
 
 print("Our algorithm")
 t1 = cputime();
-Ynew = RichelotChain(type2_invariants, ker,87,P_list=PP,partition=[12,11,10,9,8,8,7,6,6], last_step=true);
+Ynew = RichelotChain(type2_invariants, ker,87,P_list=PP, last_step=true);
 print("CPU time for Richelot chain (Round 1): ",  cputime(t1))
 t2 = cputime();
-Ynew = RichelotChain(type2_invariants, ker,87,partition=[12,11,10,9,8,8,7,6,6],last_step=true);
+Ynew = RichelotChain(type2_invariants, ker,87,last_step=true);
 print("CPU time for Richelot chain (Round 2): ",  cputime(t2))
 
 

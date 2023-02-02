@@ -301,7 +301,8 @@ def FindTransformation(type2_invariants, g1, g2, P=[]):
 
   return [alpha, beta, gamma, delta ,epsilon], [Ap,Bp,Cp,Ep];
 
-def RichelotChain(type2_invariants, kernel,n,  P_list=[], partition=[0], last_step=false):
+
+def RichelotChain(type2_invariants, kernel,n,  P_list=[], last_step=false):
   """
   * INPUT:   - type2_invariants = [A,B,C,d] defining hyperelliptic curve
   *              y^2 = (x^2-1)(x^2-A)(E*x^2-B*x+C)
@@ -309,54 +310,54 @@ def RichelotChain(type2_invariants, kernel,n,  P_list=[], partition=[0], last_st
   *             (2^n,2^n)-group of the Jacobian of the hyperelliptic curve
   *           - n
   *           - P_list: list of points
-  *           - partition: a list containing a partition of an integer smaller than n-1
-  *             (as in Remark 5.5)
   * OUTPUT:   - type2_invariants defining the codomain curve of the (2^n,2^n)-isogeny
   *           - Q_list: list of the image points in P_list under the isogeny
   """
   time_doubling = 0;
-  if sum(partition) > n :
-    print("sum of partition:%o is incorrect \n",  sum(partition));
-  m = n;
-  for mi in partition :
-    kernel_aux = kernel;
-    m = m - mi;
-    t_doub = cputime()
-    for j in range(1,m):
-      kernel_aux = DoubleType2(kernel_aux, type2_invariants);
-    time_doubling = time_doubling + cputime(t_doub)
-    for i in range(1,mi+1):
-      kernel2_aux = kernel_aux;
+  kernel_aux = kernel
+  indices = [0]
+  for i in range(n-1):
+      #print(indices)
+      gap = n-1-i-indices[-1]
       t_doub = cputime()
-      for j in range(1, mi-i+1):
-        kernel2_aux = DoubleType2(kernel2_aux, type2_invariants);
+      if gap == 1:
+          P4 = kernel_aux[-2]
+          kernel2 = DoubleType2(kernel_aux[-2:],type2_invariants)
+          if indices[-1] != 0 or not last_step:
+              indices = indices[:-1]
+              kernel_aux = kernel_aux[:-2]
+      elif gap == 2:
+          kernel4 = DoubleType2(kernel_aux[-2:], type2_invariants)
+          P4 = kernel4[0]
+          kernel2 = DoubleType2(kernel4, type2_invariants)
+      else:
+          new_ind = indices[-1] + floor(gap/2)
+          new_aux = kernel_aux[-2:]
+          for j in range(floor(gap/2)):
+              new_aux = DoubleType2(new_aux, type2_invariants)
+          indices.append(new_ind)
+          kernel_aux = kernel_aux + new_aux
+          for j in range(ceil(gap/2)-1):
+              new_aux = DoubleType2(new_aux, type2_invariants)
+          P4 = new_aux[0]
+          kernel2 = DoubleType2(new_aux, type2_invariants)
       time_doubling = time_doubling + cputime(t_doub)
-      P4 = kernel2_aux[0];
-      kernel2_aux = DoubleType2(kernel2_aux,type2_invariants);
-      trafo, type1_invariants = FindTransformation(type2_invariants, kernel2_aux[0][:3], kernel2_aux[1][:3],P=P4);
-      Q_lists = MumfordTransformationga1(trafo, [kernel, kernel_aux, P_list]);
-      type2_invariants, Q_lists = RichelotType1(type1_invariants, Q_lists);
-      [kernel, kernel_aux, P_list] = Q_lists;
 
-  #remainder
-  for i in range(1,m):
-    kernel2 = kernel;
-    t_doub = cputime()
-    for j in range(1, m-i) :
-      kernel2 = DoubleType2(kernel2, type2_invariants);
-    time_doubling = time_doubling + cputime(t_doub)
-    P4 = kernel2[0];
-    kernel2 = DoubleType2(kernel2,type2_invariants);
-    trafo, type1_invariants = FindTransformation(type2_invariants, kernel2[0][:3], kernel2[1][:3], P=P4);
-    Q_lists = MumfordTransformationga1(trafo, [kernel, P_list]);
-    type2_invariants, Q_lists = RichelotType1(type1_invariants, Q_lists);
-    [kernel, P_list] = Q_lists;
+      trafo, type1_invariants = FindTransformation(type2_invariants, kernel2[0][:3], kernel2[1][:3],P=P4);
+      Q_lists = MumfordTransformationga1(trafo, [kernel_aux, P_list]);
+      type2_invariants, Q_lists = RichelotType1(type1_invariants, Q_lists);
+      [kernel_aux, P_list] = Q_lists;
+
+  if last_step:
+      kernel2 = kernel_aux
+      trafo, type1_invariants = FindTransformation(type2_invariants, kernel2[0][:3], kernel2[1][:3]);
+      Q_lists = MumfordTransformationga1(trafo, [P_list]);
+      type2_invariants, Q_lists = RichelotType1(type1_invariants, Q_lists);
+      [P_list] = Q_lists;
+
   print("time for doubling ", time_doubling)
-  if last_step :
-    trafo, type1_invariants = FindTransformation(type2_invariants, kernel[0][:3], kernel[1][:3]);
-    Q_lists = MumfordTransformationga1(trafo, [P_list]);
-    type2_invariants, P_list = RichelotType1(type1_invariants, Q_lists);
   return type2_invariants, P_list;
+
 
 def RichelotChain_splitnew(type2_invariants, kernel,n, P_list=[], partition=[]):
   """
@@ -366,50 +367,50 @@ def RichelotChain_splitnew(type2_invariants, kernel,n, P_list=[], partition=[]):
   *             (2^n,2^n)-group of the Jacobian of the hyperelliptic curve
   *           - n
   *           - P_list: list of points
-  *           - m: paramter between 1 and n-1 accelerating the computation
-  *             (as in Remark 5.5)
-  * OUTPUT:   - type2_invariants defining the codomain curve of the (2^n,2^n)-isogeny
-  *           - Q_list: list of the image points in P_list under the isogeny
+  * OUTPUT:   True: if the Richelot chain splits; False: otherwise
   """
-  if sum(partition) > n :
-    print("sum of partition:%o is incorrect \n",  sum(partition));
-  m = n;
-  for mi in partition :
-    kernel_aux = kernel;
-    m = m - mi;
-    for j in range(1,m):
-      kernel_aux = DoubleType2(kernel_aux, type2_invariants);
-    for i in range(1,mi+1):
-      kernel2_aux = kernel_aux;
-      for j in range(1, mi-i+1):
-        kernel2_aux = DoubleType2(kernel2_aux, type2_invariants);
-      P4 = kernel2_aux[0];
-      kernel2_aux = DoubleType2(kernel2_aux,type2_invariants);
-      trafo, type1_invariants = FindTransformation(type2_invariants, kernel2_aux[0][:3], kernel2_aux[1][:3],P=P4);
-      Q_lists = MumfordTransformationga1(trafo, [kernel, kernel_aux, P_list]);
-      type2_invariants, Q_lists = RichelotType1(type1_invariants, Q_lists);
-      [kernel, kernel_aux, P_list] = Q_lists;
+  kernel_aux = kernel
+  indices = [0]
+  for i in range(n-1):
+      #print(indices)
+      gap = n-1-i-indices[-1]
+      if gap == 1:
+          P4 = kernel_aux[-2]
+          kernel2 = DoubleType2(kernel_aux[-2:],type2_invariants)
+          if indices[-1] != 0:
+              indices = indices[:-1]
+              kernel_aux = kernel_aux[:-2]
+      elif gap == 2:
+          kernel4 = DoubleType2(kernel_aux[-2:], type2_invariants)
+          P4 = kernel4[0]
+          kernel2 = DoubleType2(kernel4, type2_invariants)
+      else:
+          new_ind = indices[-1] + floor(gap/2)
+          new_aux = kernel_aux[-2:]
+          for j in range(floor(gap/2)):
+              new_aux = DoubleType2(new_aux, type2_invariants)
+          indices.append(new_ind)
+          kernel_aux = kernel_aux + new_aux
+          for j in range(ceil(gap/2)-1):
+              new_aux = DoubleType2(new_aux, type2_invariants)
+          P4 = new_aux[0]
+          kernel2 = DoubleType2(new_aux, type2_invariants)
 
-  #remainder
-  for i in range(1,m):
-    kernel2 = kernel;
-    for j in range(1, m-i) :
-      kernel2 = DoubleType2(kernel2, type2_invariants);
-    P4 = kernel2[0];
-    kernel2 = DoubleType2(kernel2,type2_invariants);
-    trafo, type1_invariants = FindTransformation(type2_invariants, kernel2[0][:3], kernel2[1][:3], P=P4);
-    Q_lists = MumfordTransformationga1(trafo, [kernel, P_list]);
-    type2_invariants, Q_lists = RichelotType1(type1_invariants, Q_lists);
-    [kernel, P_list] = Q_lists;
+      trafo, type1_invariants = FindTransformation(type2_invariants, kernel2[0][:3], kernel2[1][:3],P=P4);
+      Q_lists = MumfordTransformationga1(trafo, [kernel_aux, P_list]);
+      type2_invariants, Q_lists = RichelotType1(type1_invariants, Q_lists);
+      [kernel_aux, P_list] = Q_lists;
 
   #last step, check if split
-  trafo, type1_invariants = FindTransformation(type2_invariants, kernel[1], kernel[2]);
+  trafo, type1_invariants = FindTransformation(type2_invariants, kernel_aux[0][:3], kernel_aux[1][:3]);
   [A,B,C,E] = type1_invariants;
   #Proposition 4.2
   if C == 1:
     return true;
   else:
     return false;
+
+
 
 def TransformToType2_NEW(h, D11, D12, D21, D22, a):
   """Given a (2^a,2^a)-group <D1,D2> of Jac(y^2=h),
