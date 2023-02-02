@@ -118,7 +118,6 @@ hnew = IsogenyChainPO(h,kernel,[],a);
 print("CPU time for Richelot chain (Round 2): ", cputime(t2))
 Ynew2 = HyperellipticCurve(hnew[0]);
 
-"""
 print("  ");
 print("171-bit prime");
 
@@ -220,4 +219,3 @@ t2 = cputime();
 hnew = IsogenyChainPO(h,kernel,[],a);
 print("CPU time for Richelot chain (Round 2): ", cputime(t2))
 Ynew2 = HyperellipticCurve(hnew[0]);
-"""
